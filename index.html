@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>モヤ完</title>
+
+<style>
+:root{
+  --bg:#F9EFF1;
+  --card:#ffffff;
+  --text:#2b2b2b;
+  --muted:#6b6b6b;
+  --line:#ece7e3;
+
+  --btn:#2b2b2b;
+  --btnText:#ffffff;
+
+  /* ★統一メモ色 */
+  --ghost:#f3efec;
+
+  --radius:16px;
+  --shadow:0 8px 22px rgba(0,0,0,.06);
+  --max:720px;
+
+  /* 選択状態（背景はghost、枠線は薄く） */
+  --selBg: var(--ghost);
+  --selBorder: rgba(43,43,43,.12);
+  --selBorderW: 2px;
+
+  /* メモ枠（かなり控えめ） */
+  --memoBorder: rgba(0,0,0,.045);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+header{
+  position:sticky;
+  top:0;
+  background:rgba(249,239,241,.95);
+  border-bottom:1px solid var(--line);
+}
+
+.bar{
+  max-width:var(--max);
+  margin:auto;
+  padding:14px 16px;
+}
+
+main{
+  max-width:var(--max);
+  margin:auto;
+  padding:16px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:16px;
+}
+
+.h1{font-size:20px;font-weight:800;margin-bottom:8px}
+.p{line-height:1.7;margin:10px 0}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+.center{text-align:center}
+
+/* ★STEP見出し：番号を主役、タイトルは従 */
+.stepTitle{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:8px;
+}
+.stepNo{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:.03em;
+}
+.stepText{
+  font-weight:700;
+  font-size:15px;
+}
+
+/* ボタン（統一） */
+button{
+  border-radius:14px;
+  padding:14px;
+  font-weight:700;
+  cursor:pointer;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+}
+button:active{transform: translateY(1px);}
+
+.primary{
+  border:0;
+  background:var(--btn);
+  color:var(--btnText);
+  padding:12px 14px;
+  border-radius:12px;
+}
+
+/* 選択肢 */
+.options{display:grid;gap:10px;margin-top:10px}
+.optBtn{text-align:left}
+
+/* ★選択状態：ghostに統一＋薄い枠線 */
+.optBtn.isSelected{
+  background: var(--selBg);
+  border: var(--selBorderW) solid var(--selBorder);
+}
+
+/* ★STEP2 入力欄：選択中と同じトーンに（ここだけ修正） */
+textarea{
+  width:100%;
+  min-height:80px;
+  border-radius:14px;
+  padding:12px;
+  font-family: inherit;
+
+  background: var(--ghost);
+  border: var(--selBorderW) solid var(--selBorder);
+  box-shadow:none;
+}
+textarea:focus{
+  outline:none;
+}
+
+/* ★メモ（トップ説明／STEP2表示） */
+.memo{
+  background: var(--ghost);
+  border: 1px solid var(--memoBorder);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="bar"><strong>モヤ完</strong></div>
+</header>
+
+<main>
+
+<!-- トップ -->
+<div class="card center">
+  <img src="cat.png" alt="ハートを抱えるネコ"
+       style="max-width:180px;width:60%;margin:6px auto 12px;display:block;">
+  <div class="h1">言えなかったモヤモヤ完了</div>
+  <div class="p"><strong>3分で“言えなかった気持ち”を完了させるツールです。</strong></div>
+
+  <div class="memo">
+    <div class="small">
+      <strong>ネコは、考えて気持ちを整理しません。</strong><br>
+      感じたところを、選ぶだけでOKです。
+    </div>
+  </div>
+
+  <div style="height:10px"></div>
+  <button class="primary" id="startBtn">はじめる</button>
+</div>
+
+<!-- STEP積み上げ表示 -->
+<div id="app"></div>
+
+</main>
+
+<script>
+(function(){
+  // 更新したら消える（保存しない）
+  let started=false;
+
+  let s1="", s2="", s2done=false, s3="", s4="", done=false;
+
+  const app=document.getElementById("app");
+  document.getElementById("startBtn").onclick=()=>{
+    started=true;
+    render();
+    app.scrollIntoView({behavior:"smooth"});
+  };
+
+  app.addEventListener("input",e=>{
+    if(e.target.name==="s2") s2=e.target.value;
+  });
+
+  app.addEventListener("click",e=>{
+    const b=e.target.closest("button[data-a]");
+    if(!b) return;
+    const a=b.dataset.a, v=b.dataset.v||"";
+
+    if(a==="s1"){
+      s1=v;
+      // STEP1変えたら後続は整合性のためリセット
+      s2=""; s2done=false; s3=""; s4=""; done=false;
+    }
+    if(a==="s2"){ s2done=true; s3=""; s4=""; done=false; }
+    if(a==="s3"){ s3=v; s4=""; done=false; }
+    if(a==="s4"){ s4=v; done=true; }
+    if(a==="r"){ location.reload(); return; }
+
+    render();
+    window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+  });
+
+  function esc(t){
+    return (t||"").replace(/[&<>"']/g,m=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  const T = {
+    s1: ["STEP1", "身体の反応を選ぶ"],
+    s2: ["STEP2", "呑み込んだ言葉"],
+    s3: ["STEP3", "言えなかった言葉のタイプ"],
+    s4: ["STEP4", "身体の感じを確認する"],
+  };
+
+  function titleHtml(key){
+    return `
+      <div class="stepTitle">
+        <div class="stepNo">${T[key][0]}</div>
+        <div class="stepText">｜${T[key][1]}</div>
+      </div>
+    `;
+  }
+
+  function render(){
+    if(!started){ app.innerHTML=""; return; }
+    app.innerHTML = `
+      ${step1()}
+      ${s1 ? step2() : ""}
+      ${s1 && s2done ? step3() : ""}
+      ${s3 ? step4() : ""}
+      ${done ? finish() : ""}
+    `;
+  }
+
+  function step1(){
+    const o=[
+      ["胸","（ザワザワ・ギュッ）"],
+      ["喉","（詰まる・声が出ない）"],
+      ["お腹","（固い・重い）"],
+      ["背中","（張る・こわばる）"],
+      ["全身","（力が入る・こわばる）"],
+      ["よく分からない",""]
+    ];
+    return `
+      <div class="card">
+        ${titleHtml("s1")}
+        <div class="p"><strong>今いちばん反応している場所は？</strong></div>
+        <div class="options">
+          ${o.map(x=>`
+            <button class="optBtn ${s1===x[0]?'isSelected':''}" data-a="s1" data-v="${x[0]}">
+              ${x[0]} ${x[1] ? `<span class="small">${x[1]}</span>` : ``}
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  /* ★STEP2も他と同じ「カードに囲われたまま」 */
+  function step2(){
+    if(!s2done){
+      return `
+        <div class="card">
+          ${titleHtml("s2")}
+          <div class="p"><strong>そのとき、呑み込んだ言葉は？</strong></div>
+          <textarea name="s2" placeholder="1行でOK">${esc(s2)}</textarea>
+
+          <div class="small" style="margin-top:8px">
+            これは伝えるためではありません。<br>
+            ここで終わらせるために、書くだけです。<br><br>
+            ※この文章は保存されません。
+          </div>
+
+          <div style="height:12px"></div>
+          <button class="primary" data-a="s2">次へ</button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="card">
+        ${titleHtml("s2")}
+        <div class="p"><strong>そのとき、呑み込んだ言葉は？</strong></div>
+
+        <div class="memo">
+          <div class="small" style="white-space:pre-wrap">
+            ${s2.trim() ? esc(s2) : "（空のまま進みました）"}
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          これは伝えるためではありません。<br>
+          ここで終わらせるために、書くだけです。<br><br>
+          ※この文章は保存されません。
+        </div>
+      </div>
+    `;
+  }
+
+  function step3(){
+    const o=[
+      "頼みたかった",
+      "嫌だと言いたかった",
+      "分かってほしかった",
+      "悲しかった／寂しかった",
+      "怒っていた",
+      "距離を取りたかった"
+    ];
+    return `
+      <div class="card">
+        ${titleHtml("s3")}
+        <div class="p"><strong>いちばん近いのはどれ？</strong></div>
+        <div class="small">※正確じゃなくてOK。今の感覚でひとつ選んでください。</div>
+
+        <div class="options" style="margin-top:12px">
+          ${o.map(v=>`
+            <button class="optBtn ${s3===v?'isSelected':''}" data-a="s3" data-v="${v}">
+              ${v}
+            </button>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function step4(){
+    const o=["少しゆるんだ","変わらない","別の場所が反応した","よく分からない"];
+    return `
+      <div class="card">
+        ${titleHtml("s4")}
+        <div class="p"><strong>今の身体の感じはどう？</strong></div>
+
+        <div class="options">
+          ${o.map(v=>`
+            <button class="optBtn ${s4===v?'isSelected':''}" data-a="s4" data-v="${v}">
+              ${v}
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          ※変化がなくても、気づけた時点で完了です。
+        </div>
+      </div>
+    `;
+  }
+
+  function finish(){
+    return `
+      <div class="card center">
+        <div class="h1">完了！</div>
+        <div class="p" style="white-space:pre-line">
+今は、
+感覚と呑み込んだ言葉が
+そこにあったことに、
+触れられただけで十分です。
+        </div>
+        <button class="primary" data-a="r">閉じる</button>
+      </div>
+    `;
+  }
+})();
+</script>
+
+</body>
+</html>
