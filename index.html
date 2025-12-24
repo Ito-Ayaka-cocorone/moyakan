@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>モヤ完</title>
 
+<!-- ✅ ホーム画面に追加したときの「アイコン（ネコ）」設定：iPhone/Apple & Android 両対応 -->
+<link rel="icon" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- ✅ iPhoneをアプリっぽく（ホーム画面起動時） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="モヤ完">
+
+<!-- ✅ Android/Chrome側の色 -->
+<meta name="theme-color" content="#F9EFF1">
+
 <style>
 :root{
   --bg:#F9EFF1;
@@ -149,7 +161,7 @@ textarea:focus{
 
 <body>
   
-  <script>
+<script>
 (function(){
   const PASS = "moyakan"; // ← 合言葉（変えたければここ）
   const KEY = "moyakan_pass_ok";
@@ -165,7 +177,6 @@ textarea:focus{
   }
 })();
 </script>
-
 
 <header>
   <div class="bar"><strong>モヤ完</strong></div>
@@ -290,7 +301,6 @@ textarea:focus{
     `;
   }
 
-  /* ★STEP2も他と同じ「カードに囲われたまま」 */
   function step2(){
     if(!s2done){
       return `
@@ -398,4 +408,3 @@ textarea:focus{
 
 </body>
 </html>
-
